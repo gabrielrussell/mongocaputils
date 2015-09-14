@@ -5,6 +5,10 @@ import (
 	"io"
 )
 
+const (
+	MaxMessageSize = 48 << 20 // 48 MB
+)
+
 // ErrNotMsg is returned if a provided buffer is too small to contain a Mongo message
 var ErrNotMsg = fmt.Errorf("buffer is too small to be a Mongo message")
 
@@ -44,4 +48,22 @@ func OpFromReader(r io.Reader) (Op, error) {
 	}
 	err = result.FromReader(r)
 	return result, err
+}
+
+// OpRawFromReader reads an op without decoding it.
+func OpRawFromReader(r io.Reader) (*OpRaw, error) {
+	msg, err := ReadHeader(r)
+	if err != nil {
+		return nil, err
+	}
+	result := &OpRaw{Header: *msg}
+	if msg.OpCode == 1 {
+		err = result.ShortReplyFromReader(r)
+	} else {
+		err = result.FromReader(r)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

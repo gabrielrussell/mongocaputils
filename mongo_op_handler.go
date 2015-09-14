@@ -74,10 +74,14 @@ func (s *MongoOpStream) readOp(r io.Reader) (mongoproto.Op, error) {
 	return mongoproto.OpFromReader(r)
 }
 
+func (s *MongoOpStream) readOpRaw(r io.Reader) (*mongoproto.OpRaw, error) {
+	return mongoproto.OpRawFromReader(r)
+}
+
 func (s *MongoOpStream) handleStream(r *tcpreaderwrapper.ReaderStreamWrapper) {
 	lastSeen := s.FirstSeen
 	for {
-		op, err := s.readOp(r)
+		op, err := s.readOpRaw(r)
 		if err == io.EOF {
 			discarded, err := ioutil.ReadAll(r)
 			if len(discarded) != 0 || err != nil {
@@ -111,7 +115,7 @@ func (s *MongoOpStream) handleStream(r *tcpreaderwrapper.ReaderStreamWrapper) {
 				seen = r.Seen
 			}
 		}
-		s.unorderedOps <- OpWithTime{op, seen}
+		s.unorderedOps <- OpWithTime{*op, seen}
 		r.Reassemblies = r.Reassemblies[:0]
 	}
 }

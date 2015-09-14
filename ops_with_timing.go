@@ -7,7 +7,7 @@ import (
 )
 
 type OpWithTime struct {
-	mongoproto.Op
+	mongoproto.OpRaw
 	Seen time.Time
 }
 
