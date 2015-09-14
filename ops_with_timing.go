@@ -3,7 +3,7 @@ package mongocaputils
 import (
 	"time"
 
-	"github.com/tmc/mongocaputils/mongoproto"
+	"github.com/gabrielrussell/mongocaputils/mongoproto"
 )
 
 type OpWithTime struct {

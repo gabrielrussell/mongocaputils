@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gabrielrussell/mongocaputils"
+	"github.com/gabrielrussell/mongocaputils/mongoproto"
 	"github.com/google/gopacket/pcap"
-	"github.com/tmc/mongocaputils"
-	"github.com/tmc/mongocaputils/mongoproto"
 )
 
 var (

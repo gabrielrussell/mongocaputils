@@ -14,8 +14,8 @@ import (
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
 
-	"github.com/tmc/mongocaputils/mongoproto"
-	"github.com/tmc/mongocaputils/tcpreaderwrapper"
+	"github.com/gabrielrussell/mongocaputils/mongoproto"
+	"github.com/gabrielrussell/mongocaputils/tcpreaderwrapper"
 )
 
 type MongoOpStream struct {
