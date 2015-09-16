@@ -1,6 +1,9 @@
 package mongocaputils
 
 import (
+	"bytes"
+	"fmt"
+	"gopkg.in/mgo.v2"
 	"time"
 
 	"github.com/gabrielrussell/mongocaputils/mongoproto"
@@ -8,7 +11,8 @@ import (
 
 type OpWithTime struct {
 	mongoproto.OpRaw
-	Seen time.Time
+	Seen       time.Time
+	Connection string
 }
 
 type orderedOps []OpWithTime
@@ -34,4 +38,41 @@ func (o *orderedOps) Pop() interface{} {
 
 func (o *orderedOps) Push(op interface{}) {
 	*o = append(*o, op.(OpWithTime))
+}
+
+func (o *OpWithTime) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+	reader := bytes.NewReader(o.OpRaw.Body)
+	fmt.Printf("%v %v\n", o.OpRaw.Header, len(o.OpRaw.Body))
+	switch o.OpRaw.Header.OpCode {
+	case mongoproto.OpCodeQuery:
+		opQuery := &mongoproto.OpQuery{Header: o.OpRaw.Header}
+		err := opQuery.FromReader(reader)
+		if err != nil {
+			return err
+		}
+		return opQuery.Execute(session, realReplyChan)
+	case mongoproto.OpCodeGetMore:
+		opGetMore := &mongoproto.OpGetMore{Header: o.OpRaw.Header}
+		err := opGetMore.FromReader(reader)
+		if err != nil {
+			return err
+		}
+		return opGetMore.Execute(session, realReplyChan)
+	case mongoproto.OpCodeInsert:
+		opInsert := &mongoproto.OpInsert{Header: o.OpRaw.Header}
+		err := opInsert.FromReader(reader)
+		if err != nil {
+			return err
+		}
+		return opInsert.Execute(session, realReplyChan)
+	default:
+		fmt.Printf("OpWithTime Execute unknown\n")
+		opUnknown := &mongoproto.OpUnknown{Header: o.OpRaw.Header}
+		err := opUnknown.FromReader(reader)
+		if err != nil {
+			return err
+		}
+		return opUnknown.Execute(session, realReplyChan)
+	}
+	return nil
 }

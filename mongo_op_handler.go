@@ -43,7 +43,7 @@ func NewMongoOpStream(heapBufSize int) *MongoOpStream {
 func (s *MongoOpStream) New(a, b gopacket.Flow) tcpassembly.Stream {
 	r := tcpreaderwrapper.NewReaderStreamWrapper()
 	log.Println("starting stream", a, b)
-	go s.handleStream(&r)
+	go s.handleStream(&r, b.String())
 	return &r
 }
 
@@ -78,7 +78,7 @@ func (s *MongoOpStream) readOpRaw(r io.Reader) (*mongoproto.OpRaw, error) {
 	return mongoproto.OpRawFromReader(r)
 }
 
-func (s *MongoOpStream) handleStream(r *tcpreaderwrapper.ReaderStreamWrapper) {
+func (s *MongoOpStream) handleStream(r *tcpreaderwrapper.ReaderStreamWrapper, connection string) {
 	lastSeen := s.FirstSeen
 	for {
 		op, err := s.readOpRaw(r)
@@ -115,7 +115,7 @@ func (s *MongoOpStream) handleStream(r *tcpreaderwrapper.ReaderStreamWrapper) {
 				seen = r.Seen
 			}
 		}
-		s.unorderedOps <- OpWithTime{*op, seen}
+		s.unorderedOps <- OpWithTime{*op, seen, connection}
 		r.Reassemblies = r.Reassemblies[:0]
 	}
 }
