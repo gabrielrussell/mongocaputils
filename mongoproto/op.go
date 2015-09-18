@@ -3,6 +3,9 @@ package mongoproto
 import (
 	"fmt"
 	"io"
+	"time"
+
+	"github.com/gabrielrussell/mongocaputils/tcpreader"
 )
 
 const (
@@ -51,10 +54,14 @@ func OpFromReader(r io.Reader) (Op, error) {
 }
 
 // OpRawFromReader reads an op without decoding it.
-func OpRawFromReader(r io.Reader) (*OpRaw, error) {
+func OpRawFromReader(r io.Reader) (*OpRaw, time.Time, error) {
+	var seen time.Time
 	msg, err := ReadHeader(r)
 	if err != nil {
-		return nil, err
+		return nil, seen, err
+	}
+	if readerStream, ok := (r).(*tcpreader.ReaderStream); ok {
+		seen = readerStream.Seen()
 	}
 	result := &OpRaw{Header: *msg}
 	if msg.OpCode == 1 {
@@ -63,7 +70,7 @@ func OpRawFromReader(r io.Reader) (*OpRaw, error) {
 		err = result.FromReader(r)
 	}
 	if err != nil {
-		return nil, err
+		return nil, seen, err
 	}
-	return result, nil
+	return result, seen, nil
 }

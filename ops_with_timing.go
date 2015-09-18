@@ -12,6 +12,8 @@ import (
 type OpWithTime struct {
 	mongoproto.OpRaw
 	Seen       time.Time
+	PlayAt     time.Time `bson:",omitempty"`
+	EOF        bool      `bson:",omitempty"`
 	Connection string
 }
 
@@ -40,7 +42,7 @@ func (o *orderedOps) Push(op interface{}) {
 	*o = append(*o, op.(OpWithTime))
 }
 
-func (o *OpWithTime) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+func (o *OpWithTime) Execute(session *mgo.Session) error {
 	reader := bytes.NewReader(o.OpRaw.Body)
 	fmt.Printf("%v %v\n", o.OpRaw.Header, len(o.OpRaw.Body))
 	switch o.OpRaw.Header.OpCode {
@@ -50,21 +52,21 @@ func (o *OpWithTime) Execute(session *mgo.Session, realReplyChan chan<- int32) e
 		if err != nil {
 			return err
 		}
-		return opQuery.Execute(session, realReplyChan)
+		return opQuery.Execute(session)
 	case mongoproto.OpCodeGetMore:
 		opGetMore := &mongoproto.OpGetMore{Header: o.OpRaw.Header}
 		err := opGetMore.FromReader(reader)
 		if err != nil {
 			return err
 		}
-		return opGetMore.Execute(session, realReplyChan)
+		return opGetMore.Execute(session)
 	case mongoproto.OpCodeInsert:
 		opInsert := &mongoproto.OpInsert{Header: o.OpRaw.Header}
 		err := opInsert.FromReader(reader)
 		if err != nil {
 			return err
 		}
-		return opInsert.Execute(session, realReplyChan)
+		return opInsert.Execute(session)
 	default:
 		fmt.Printf("OpWithTime Execute unknown\n")
 		opUnknown := &mongoproto.OpUnknown{Header: o.OpRaw.Header}
@@ -72,7 +74,7 @@ func (o *OpWithTime) Execute(session *mgo.Session, realReplyChan chan<- int32) e
 		if err != nil {
 			return err
 		}
-		return opUnknown.Execute(session, realReplyChan)
+		return opUnknown.Execute(session)
 	}
 	return nil
 }

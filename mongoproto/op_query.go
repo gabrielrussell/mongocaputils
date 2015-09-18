@@ -93,7 +93,7 @@ func (op *OpQuery) toWire() []byte {
 	return nil
 }
 
-func (op *OpQuery) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+func (op *OpQuery) Execute(session *mgo.Session) error {
 	fmt.Printf("query \n")
 	nsParts := strings.Split(op.FullCollectionName, ".")
 	coll := session.DB(nsParts[0]).C(nsParts[1])

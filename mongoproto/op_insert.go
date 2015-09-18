@@ -74,6 +74,6 @@ func (op *OpInsert) toWire() []byte {
 	return nil
 }
 
-func (op *OpInsert) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+func (op *OpInsert) Execute(session *mgo.Session) error {
 	return nil
 }

@@ -36,6 +36,6 @@ func (op *OpUnknown) toWire() []byte {
 	return nil
 }
 
-func (op *OpUnknown) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+func (op *OpUnknown) Execute(session *mgo.Session) error {
 	return nil
 }

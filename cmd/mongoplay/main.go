@@ -7,6 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"io"
 	"os"
+	"time"
 
 	"github.com/gabrielrussell/mongocaputils"
 	"github.com/gabrielrussell/mongocaputils/mongoproto"
@@ -49,7 +50,7 @@ func newPlayOpChan(fileName string) (<-chan *mongocaputils.OpWithTime, error) {
 	return ch, nil
 }
 
-func newOpConnection(url string, realReplyChan chan<- int32) (chan<- *mongocaputils.OpWithTime, error) {
+func newOpConnection(url string) (chan<- *mongocaputils.OpWithTime, error) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		return nil, err
@@ -57,32 +58,17 @@ func newOpConnection(url string, realReplyChan chan<- int32) (chan<- *mongocaput
 	ch := make(chan *mongocaputils.OpWithTime)
 	go func() {
 		for op := range ch {
-			err = op.Execute(session, realReplyChan)
+			t := time.Now()
+			if t.Before(op.PlayAt) {
+				time.Sleep(op.PlayAt.Sub(t))
+			}
+			err = op.Execute(session)
 			if err != nil {
 				fmt.Printf("op.Execute %v", err)
 			}
 		}
 	}()
 	return ch, nil
-}
-
-type realReply struct {
-	numberReturned int32
-}
-
-func newReplyManager() (chan<- *mongocaputils.OpWithTime, chan<- int32) {
-	recordedReplyChan := make(chan *mongocaputils.OpWithTime)
-	realReplyChan := make(chan int32)
-	go func() {
-		for {
-			select {
-			case <-realReplyChan:
-			case <-recordedReplyChan:
-				//XXX also pipe in that we expect a reply
-			}
-		}
-	}()
-	return recordedReplyChan, realReplyChan //XXX also pipe in that we expect a reply
 }
 
 func main() {
@@ -92,23 +78,27 @@ func main() {
 		fmt.Printf("newPlayOpChan: %v\n", err)
 		os.Exit(1)
 	}
-	recordedReplyChan, realReplyChan := newReplyManager()
+	var playbackStartTime, recordingStartTime time.Time
+	var delta time.Duration
 	sessions := make(map[string]chan<- *mongocaputils.OpWithTime)
 	for op := range opChan {
-		fmt.Printf("%v\n\n", op)
-		if op.OpCode() == 1 {
-			recordedReplyChan <- op
-		} else {
-			session, ok := sessions[op.Connection]
-			if !ok {
-				session, err = newOpConnection(*host, realReplyChan)
-				if err != nil {
-					fmt.Printf("newOpConnection: %v\n", err)
-					os.Exit(1)
-				}
-				sessions[op.Connection] = session
-			}
-			session <- op
+		if recordingStartTime.IsZero() && !op.Seen.IsZero() {
+			recordingStartTime = op.Seen
+			playbackStartTime = time.Now()
+			delta = playbackStartTime.Sub(recordingStartTime)
 		}
+		// if we want to play faster or slower then delta will need to not be constant
+		op.PlayAt = op.Seen.Add(delta)
+		fmt.Printf("%#v\n\n", op)
+		session, ok := sessions[op.Connection]
+		if !ok {
+			session, err = newOpConnection(*host)
+			if err != nil {
+				fmt.Printf("newOpConnection: %v\n", err)
+				os.Exit(1)
+			}
+			sessions[op.Connection] = session
+		}
+		session <- op
 	}
 }

@@ -48,6 +48,6 @@ func (op *OpGetMore) toWire() []byte {
 	return nil
 }
 
-func (op *OpGetMore) Execute(session *mgo.Session, realReplyChan chan<- int32) error {
+func (op *OpGetMore) Execute(session *mgo.Session) error {
 	return nil
 }
