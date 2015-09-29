@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/mgo.v2"
+	"github.com/gabrielrussell/mgo"
 )
 
 // OpUnknown is not a real mongo Op but represents an unrecognized or corrupted op

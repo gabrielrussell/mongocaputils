@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/gabrielrussell/mgo/bson"
 	"os"
 
 	"github.com/gabrielrussell/mongocaputils"

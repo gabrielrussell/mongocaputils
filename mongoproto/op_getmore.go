@@ -1,7 +1,7 @@
 package mongoproto
 
 import (
-	"gopkg.in/mgo.v2"
+	"github.com/gabrielrussell/mgo"
 	"io"
 )
 

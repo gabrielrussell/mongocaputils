@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/gabrielrussell/mgo"
+	"github.com/gabrielrussell/mgo/bson"
 )
 
 func main() {

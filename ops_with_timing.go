@@ -3,7 +3,7 @@ package mongocaputils
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/mgo.v2"
+	"github.com/gabrielrussell/mgo"
 	"time"
 
 	"github.com/gabrielrussell/mongocaputils/mongoproto"

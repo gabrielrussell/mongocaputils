@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/mongodb/mongo-tools/common/bsonutil"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/gabrielrussell/mgo"
+	"github.com/gabrielrussell/mgo/bson"
 )
 
 const (

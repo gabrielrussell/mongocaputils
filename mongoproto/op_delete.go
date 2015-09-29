@@ -1,6 +1,6 @@
 package mongoproto
 
-import "gopkg.in/mgo.v2/bson"
+import "github.com/gabrielrussell/mgo/bson"
 
 const (
 	OpDeleteSingleRemove OpDeleteFlags = 1 << iota
